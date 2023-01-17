@@ -1,0 +1,51 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_boston
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
+
+data=load_boston()
+x=data.data
+y=data.target
+
+x_train,x_val,y_train,y_val=train_test_split(x,y,test_size=0.2,random_state=42)
+
+scaler=StandardScaler()
+x_train=scaler.fit_transform(x_train)
+x_val=scaler.transform(x_val)
+
+model=Sequential()
+model.add(Dense(64,input_shape=(x_train.shape[1],),activation='relu'))
+model.add(Dense(32,activation='relu'))
+model.add(Dense(1))
+model.compile(optimizer='adam',loss='mse',metrics=['mae'])
+
+history=model.fit(x_train,y_train,epochs=50,validation_data=(x_val,y_val))
+
+plt.plot(history.history['mae'])
+plt.plot(history.history['val_mae'])
+plt.title('model accuracy')
+plt.xlabel('Accuracy')
+plt.ylabel('Epoch')
+plt.show()
+
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.xlabel('Loss')
+plt.ylabel('Epoch')
+plt.show()
+
+model.fit(x_train,y_train,epochs=50,validation_data=(x_val,y_val))
+
+test_loss,test_mae=model.evaluate(x_val,y_val,verbose=2)
+
+print("test set mean squared error {:5.2f}".format(test_loss))
+print("test set mean Absolute error {:5.2f}".format(test_mae))
+
+y_pred=model.predict(x_val)
+
+for i in range(len(y_val)):
+    print("predicted: {:.2f} real:{:.2f}".format(y_pred[i][0],y_val[i]))
